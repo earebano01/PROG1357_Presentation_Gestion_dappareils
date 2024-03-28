@@ -1,0 +1,404 @@
+<title>Room 103</title>
+
+{% extends 'ardjson/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-center">Room 103</h3>
+    <div class="text-center">
+        <a href="http://192.168.1.152:8080/api/data" target="_blank">http://192.168.1.152:8080/api/data</a>
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="temperatureChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="humidityChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="chart-container">
+                <canvas id="temphumChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="photoresistorChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <canvas id="soundChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    Chart.defaults.color = 'white';
+    Chart.defaults.borderColor = 'gray';
+    let temperatureChart;
+    let humidityChart;
+    let temphumChart;
+    let photoresistorChart;
+    let soundChart;
+
+    function fetchDataAndChart(apiUrl, chartType) {
+        fetch(apiUrl)
+            .then(response => response.text())
+            .then(data => {
+                if (chartType === 'temperature') {
+                    updateTemperatureChart(data);
+                } else if (chartType === 'humidity') {
+                    updateHumidityChart(data);
+                } else if (chartType === 'temphum') {
+                    updatetemphumChart(data);
+                } else if (chartType === 'photoresistor') {
+                    updatephotoresistorChart(data);
+                } else if (chartType === 'sound') {
+                    updatesoundChart(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    }
+
+    function updateTemperatureChart(data) {
+        const temperatures = [];
+        const dates = [];
+
+        data.split('\n').forEach(line => {
+            if (line.trim() !== '') {
+                const json = JSON.parse(line);
+                if (json.temperature !== undefined) {
+                    temperatures.push(json.temperature);
+                    const datetime = `${json.date} ${json.time}`;
+                    dates.push(datetime);
+                }
+            }
+        });
+
+        const ctx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureData = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: temperatures,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                    pointStyle: 'circle',
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }
+            ]
+        };
+        const temperatureConfig = {
+            type: 'bar',
+            data: temperatureData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 30,
+                        right: 30
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `Témperature`
+                    }
+                }
+            }
+        };
+
+        if (temperatureChart) {
+            temperatureChart.destroy();
+        }
+
+        temperatureChart = new Chart(ctx, temperatureConfig);
+    }
+
+    function updateHumidityChart(data) {
+        const humidities = [];
+        const dates = [];
+
+        data.split('\n').forEach(line => {
+            if (line.trim() !== '') {
+                const json = JSON.parse(line);
+                if (json.humidity !== undefined) {
+                    humidities.push(json.humidity);
+                    const datetime = `${json.date} ${json.time}`;
+                    dates.push(datetime);
+                }
+            }
+        });
+
+        const ctx = document.getElementById('humidityChart').getContext('2d');
+        const humidityData = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Humidity (%)',
+                    data: humidities,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0, 255, 0, 0.5)',
+                    pointStyle: 'circle',
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }
+            ]
+        };
+        const humidityConfig = {
+            type: 'line',
+            data: humidityData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 30,
+                        right: 30
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `Humidité`
+                    }
+                }
+            }
+        };
+
+        if (humidityChart) {
+            humidityChart.destroy();
+        }
+
+        humidityChart = new Chart(ctx, humidityConfig);
+    }
+
+    function updatetemphumChart(data) {
+        const temperatures = [];
+        const humidities = [];
+        const dates = [];
+
+        data.split('\n').forEach(line => {
+            if (line.trim() !== '') {
+                const json = JSON.parse(line);
+                if (json.temperature !== undefined && json.humidity !== undefined) {
+                    temperatures.push(json.temperature);
+                    humidities.push(json.humidity);
+                    const datetime = `${json.date} ${json.time}`;
+                    dates.push(datetime);
+                }
+            }
+        });
+
+        const ctx = document.getElementById('temphumChart').getContext('2d');
+        const temphumData = {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: temperatures,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                    pointStyle: 'circle',
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: humidities,
+                    borderColor: 'green',
+                    backgroundColor: 'rgba(0, 255, 0, 0.5)',
+                    pointStyle: 'circle',
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }
+            ]
+        };
+        const temphumConfig = {
+            type: 'line',
+            data: temphumData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 30,
+                        right: 30
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `Témperature et Humidité`
+                    }
+                }
+            }
+        };
+
+        if (temphumChart) {
+            temphumChart.destroy();
+        }
+
+        temphumChart = new Chart(ctx, temphumConfig);
+    }
+
+    
+
+    function updatephotoresistorChart(data) {
+    const photoresistors = [];
+    const dates = [];
+
+    data.split('\n').forEach(line => {
+        if (line.trim() !== '') {
+            const json = JSON.parse(line);
+            if (json.photoresistor !== undefined) {
+                photoresistors.push(json.photoresistor);
+                const datetime = `${json.date} ${json.time}`;
+                dates.push(datetime);
+            }
+        }
+    });
+
+    const ctx = document.getElementById('photoresistorChart').getContext('2d');
+    const photoresistorData = {
+        labels: dates,
+        datasets: [
+            {
+                label: 'Lumiere',
+                data: photoresistors,
+                borderColor: 'yellow',
+                backgroundColor: 'rgba(255, 255, 0, 0.5)',
+                pointStyle: 'circle',
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }
+        ]
+    };
+    const photoresistorConfig = {
+        type: 'line',
+        data: photoresistorData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 30,
+                    right: 30
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Lumiere`
+                }
+            }
+        }
+    };
+
+    if (photoresistorChart) {
+        photoresistorChart.destroy();
+    }
+
+    photoresistorChart = new Chart(ctx, photoresistorConfig);
+}
+
+    function updatesoundChart(data) {
+    const sounds = [];
+    const dates = [];
+
+    data.split('\n').forEach(line => {
+        if (line.trim() !== '') {
+            const json = JSON.parse(line);
+            if (json.sound !== undefined) {
+                sounds.push(json.sound);
+                const datetime = `${json.date} ${json.time}`;
+                dates.push(datetime);
+            }
+        }
+    });
+
+    const ctx = document.getElementById('soundChart').getContext('2d');
+    const soundData = {
+        labels: dates,
+        datasets: [
+            {
+                label: 'Son',
+                data: sounds,
+                borderColor: 'blue',
+                backgroundColor: 'rgba(0, 0, 255, 0.5)',
+                pointStyle: 'circle',
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }
+        ]
+    };
+    const soundConfig = {
+        type: 'line',
+        data: soundData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 30,
+                    right: 30
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Son`
+                }
+            }
+        }
+    };
+
+    if (soundChart) {
+        soundChart.destroy();
+    }
+
+    soundChart = new Chart(ctx, soundConfig);
+}
+
+
+    window.onload = function() {
+        fetchDataAndChart("http://192.168.1.152:8080/api/data", "temperature");
+        fetchDataAndChart("http://192.168.1.152:8080/api/data", "humidity");
+        fetchDataAndChart("http://192.168.1.152:8080/api/data", "temphum");
+        fetchDataAndChart("http://192.168.1.152:8080/api/data", "photoresistor");
+        fetchDataAndChart("http://192.168.1.152:8080/api/data", "sound");
+
+        // setInterval(function () {
+        //     fetchDataAndChart("http://192.168.1.152:8080/api/data", "temperature");
+        //     fetchDataAndChart("http://192.168.1.152:8080/api/data", "humidity");
+        //     fetchDataAndChart("http://192.168.1.152:8080/api/data", "temphum");
+        // }, 3000);
+    };
+</script>
+
+<br>
+{% endblock %}

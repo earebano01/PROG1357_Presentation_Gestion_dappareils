@@ -1,0 +1,109 @@
+{% extends 'ardjson/base.html' %}
+
+{% block content %}
+<br>
+<div class="text-center">
+    <h3>Liste des Objets Connectés</h3>
+</div>
+<div class="scroll-container">
+    <table class="table table-dark table-striped table-padding">
+        <thead>
+            <tr>
+                <th>Objet ID</th>
+                <th>Nom</th>
+                <th>Device ID</th>
+                <th>Type</th>
+                <th>Type de Mesure</th>
+                <th>Type d'Action</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="body">
+            {% for objet in objets %}
+            <tr>
+                <td>{{ objet.objet_id }}</td>
+                <td>{{ objet.nom }}</td>
+                <td>{{ objet.device_id }}</td>
+                <td>{{ objet.type }}</td>
+                <td>{{ objet.typemesure }}</td>
+                <td>{{ objet.typeaction }}</td>
+                <td>
+                    <a href="{% url 'upd_obj' objet.objet_id %}" class="btn btn-primary btn-sm">Modifier</a>
+                    <button class="btn btn-danger btn-sm delete-btn" data-obj-id="{{ objet.objet_id }}">Supprimer</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<br>
+<div class="text-center">
+    <a href="{% url 'add_obj' %}" class="btn btn-success">Ajouter un Objet Connecté</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const objId = this.getAttribute('data-obj-id');
+                Swal.fire({
+                    title: 'Êtes-vous sûr de vouloir supprimer cet objet ?',
+                    text: 'Cette action est irréversible !',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Oui, supprimer',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        deleteObject(objId);
+                    }
+                });
+            });
+        });
+    });
+
+    function deleteObject(objId) {
+        const del = new XMLHttpRequest();
+        del.open('DELETE', '/delete_obj/' + objId + '/');
+        del.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+        del.onload = function () {
+            if (del.status === 200) {
+                const response = JSON.parse(del.responseText);
+                Swal.fire('Succès', response.message, 'success').then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Erreur', 'Échec de la suppression de l\'objet', 'error');
+                console.error('Échec de la suppression de l\'objet :', del.statusText);
+            }
+        };
+        del.onerror = function () {
+            Swal.fire('Erreur', 'Échec de la suppression de l\'objet', 'error');
+            console.error('Échec de la suppression de l\'objet :', del.statusText);
+        };
+        del.send();
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,80 @@
+{% extends 'ardjson/base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <br>
+      <h2 class="text-center">Modifier l'appareil</h2>
+      <form method="post" id="updateForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="objet_id">Objet ID:</label>
+          <input type="text" class="form-control" id="objet_id" name="objet_id" value="{{ objet.objet_id }}" readonly style="background-color: #f0f0f0;">
+        </div>
+        <div class="form-group">
+          <label for="nom">Nom:</label>
+          <input type="text" class="form-control" id="nom" name="nom" value="{{ objet.nom }}">
+        </div>
+        <div class="form-group">
+          <label for="type">Type:</label>
+          <input type="text" class="form-control" id="type" name="type" value="{{ objet.type }}">
+        </div>
+        <button type="button" class="btn btn-primary" id="updateBtn">Modifier</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+   document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('updateBtn').addEventListener('click', function() {
+        Swal.fire({
+            title: 'Confirmation',
+            text: 'Êtes-vous sûr de vouloir modifier cet objet?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Oui',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const objId = "{{ objet.objet_id }}";
+                const formData = new FormData(document.getElementById('updateForm'));
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                updateObject(objId, formData, csrfToken);
+            }
+        });
+    });
+});
+
+async function updateObject(objId, formData, csrfToken) {
+    try {
+        const response = await saveDatabase(`/upd_obj/${objId}/`, formData, csrfToken);
+        if (!response.ok) {
+            throw new Error('Échec de la modification de l\'objet sur le serveur');
+        }
+        Swal.fire('Succès', 'Objet modifié avec succès', 'success').then(() => {
+            window.location.href = '/objconn/'; 
+        });
+    } catch (error) {
+        console.error('Erreur lors de la modification de l\'objet :', error);
+        Swal.fire('Erreur', 'Échec de la modification de l\'objet sur le serveur', 'error');
+    }
+}
+
+async function saveDatabase(url, data, csrfToken) {
+    const response = await fetch(url, {
+        method: 'POST', 
+        headers: {
+            'X-CSRFToken': csrfToken,
+        },
+        body: data, 
+    });
+    return response;
+}
+
+</script>
+
+
+{% endblock %}

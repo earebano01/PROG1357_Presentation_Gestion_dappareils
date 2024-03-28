@@ -1,0 +1,254 @@
+{% extends 'ardjson/base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <br><br>
+      <h2 class="text-center">Ajouter un nouvel appareil</h2>
+      <form method="post" id="addForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="nom">Nom:</label>
+          <input type="text" class="form-control" id="nom" name="nom">
+        </div>
+        <div class="form-group">
+          <label for="type">Type:</label>
+          <input type="text" class="form-control" id="type" name="type">
+        </div>
+        <div class="form-group" id="mesureGroup" style="display: none;">
+          <label for="typemesure">Type de mesure:</label>
+          <select class="form-control" id="typemesure" name="typemesure">
+            <option value="">Sélectionner le Type de Mesure</option>
+            <option value="Temperature">Temperature</option>
+            <option value="Humidite">Humidite</option>
+            <option value="Temperature & Humidite">Temperature & Humidite</option>
+            <option value="Son">Son</option>
+            <option value="Distance">Distance</option>
+            <option value="Lumiere">Lumière</option>
+          </select>
+        </div>
+        <div class="form-group" id="actionGroup" style="display: none;">
+          <label for="typeaction">Type d'action:</label>
+          <select class="form-control" id="typeaction" name="typeaction">
+            <option value="">Sélectionner le Type d'Action</option>
+            <option value="Allumer / Eteindre">Allumer / Éteindre</option>
+            <option value="Ouvrir / Fermer">Ouvrir / Fermer</option>
+            <option value="Augmenter / Diminuer">Augmenter / Diminuer</option>
+            <option value="Activer / Desactiver">Activer / Désactiver</option>
+            <option value="Tourner / Incliner">Tourner / Incliner</option>
+            <option value="Positionner / Réinitialiser">Positionner / Réinitialiser</option>
+          </select>
+        </div>
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <button type="button" class="btn btn-primary btn-block" id="addBtn">Ajouter</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <br><br>
+      <h2 class="text-center">Vérification</h2>
+      <div id="verificationContainer" class="scroll-verification"></div>
+      <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+          <button type="button" class="btn btn-success btn-block" id="submitBtn" style="display: none;">Soumettre</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('addBtn').addEventListener('click', async function() {
+        var form = document.getElementById('addForm');
+        var formData = new FormData(form);
+        var verificationHtml = '<ul>';
+        for (var pair of formData.entries()) {
+            if (pair[0] !== 'csrfmiddlewaretoken' && pair[0] !== 'typeaction') {
+                verificationHtml += '<li><strong>' + pair[0] + ':</strong> ' + pair[1] + '</li>';
+            }
+        }
+        
+        var sensorType = document.getElementById('typemesure').value;
+        var sensorData = await fetchSensorData(sensorType);
+
+        if (sensorData) {
+            verificationHtml += '<li><strong>Device ID:</strong> ' + sensorData.deviceid + '</li>';
+            if (sensorType === 'Temperature') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + sensorData.temperature + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + 0.0 + '</li>';
+            } else if (sensorType === 'Humidite') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + sensorData.humidite + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + 0.0 + '</li>';
+            } else if (sensorType === 'Temperature & Humidite') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + sensorData.temperature + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + sensorData.humidity + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + 0.0 + '</li>';
+            } else if (sensorType === 'Son') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + sensorData.sound + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + 0.0 + '</li>';
+            } else if (sensorType === 'Distance') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + sensorData.distance + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + 0.0 + '</li>';
+            } else if (sensorType === 'Lumiere') {
+                verificationHtml += '<li><strong>Temperature:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Humidite:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Son:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Distance:</strong> ' + 0.0 + '</li>';
+                verificationHtml += '<li><strong>Lumiere:</strong> ' + sensorData.photoresistor + '</li>';
+            }
+            verificationHtml += '<li><strong>Date:</strong> ' + sensorData.date + '</li>';
+            verificationHtml += '<li><strong>Time:</strong> ' + sensorData.time + '</li>';
+            verificationHtml += '<li><strong>Status:</strong> Actif</li>';
+        } else {
+          verificationHtml += '<li>Erreur lors de la récupération des données du capteur</li>';
+        }
+
+        verificationHtml += '</ul>';
+        document.getElementById('verificationContainer').innerHTML = verificationHtml;
+        document.getElementById('submitBtn').style.display = 'block';
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', async function() {
+    var verificationData = extractDataFromVerificationContainer();
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const response = await saveDatabase('/api/save-data/', verificationData, csrfToken);
+        if (!response.ok) {
+            throw new Error('L\'enregistrement des données sur le serveur a échoué');
+        }
+        Swal.fire('Success', 'Données enregistrées avec succès', 'succès').then(() => {
+            window.location.href = '/objconn/'; 
+          });
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement des données :', error);
+        Swal.fire('Erreur', 'Échec de l\'enregistrement des données sur le serveur', 'erreur');
+    }
+});
+
+async function saveDatabase(url, data, csrfToken) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify(data),
+    });
+    return response;
+}
+
+    document.getElementById('type').addEventListener('change', function() {
+      var type = this.value.toLowerCase();
+      var mesureGroup = document.getElementById('mesureGroup');
+      var actionGroup = document.getElementById('actionGroup');
+      if (type.includes('capteur')) {
+        mesureGroup.style.display = 'block';
+        actionGroup.style.display = 'none';
+      } else if (type.includes('actionneur')) {
+        actionGroup.style.display = 'block';
+        mesureGroup.style.display = 'none';
+      } else {
+        actionGroup.style.display = 'none';
+        mesureGroup.style.display = 'none';
+      }
+      Swal.fire({
+        title: "Voulez-vous ajouter cet appareil en tant que capteur ou actionneur ?",
+        showCancelButton: true,
+        confirmButtonText: "Capteur",
+        cancelButtonText: "Actionneur",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          mesureGroup.style.display = 'block';
+          actionGroup.style.display = 'none';
+        } else {
+          actionGroup.style.display = 'block';
+          mesureGroup.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  async function fetchSensorData(sensorType) {
+    try {
+        const response = await fetch('http://192.168.1.154:8080/api/data');
+        if (!response.ok) {
+            throw new Error('La réponse du réseau n\'était pas valide.');
+        }
+        
+        const textData = await response.text();
+        console.log('Données textuelles récupérées :', textData);
+        
+        const jsonData = textData.trim().split('\n').map(line => JSON.parse(line));
+        
+        let deviceEntry;
+        switch (sensorType) {
+            case 'Temperature':
+                deviceEntry = jsonData.find(entry => entry.temperature !== undefined && entry.humidity !== undefined);
+                break;
+            case 'Humidite':
+                deviceEntry = jsonData.find(entry => entry.temperature !== undefined && entry.humidity !== undefined);
+                break;
+            case 'Temperature & Humidite':
+                deviceEntry = jsonData.find(entry => entry.temperature !== undefined && entry.humidity !== undefined);
+                break;
+            case 'Lumiere':
+                deviceEntry = jsonData.find(entry => entry.photoresistor !== undefined);
+                break;
+            case 'Son':
+                deviceEntry = jsonData.find(entry => entry.sound !== undefined);
+                break;
+            default:
+                throw new Error('Type de capteur invalide');
+        }
+        
+        if (!deviceEntry) {
+            throw new Error('Aucune donnée trouvée pour le type de capteur spécifié');
+        }
+
+        let temphum;
+        if (deviceEntry.temperature !== undefined && deviceEntry.humidity !== undefined) {
+            temphum = `${deviceEntry.temperature}, ${deviceEntry.humidity}`;
+        }
+
+        const { deviceid, temperature, humidity, date, time, photoresistor, sound, distance, lumiere } = deviceEntry;
+        return { deviceid, temperature, humidity, date, time, photoresistor, sound, distance, lumiere, temphum };
+
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données du capteur :', error);
+        return null;
+    }
+}
+
+function extractDataFromVerificationContainer() {
+    var verificationData = {};
+    var verificationItems = document.querySelectorAll('#verificationContainer ul li');
+    verificationItems.forEach(function(item) {
+        var parts = item.textContent.split(':');
+        var key = parts[0].trim();
+        var value = parts[1].trim();
+        verificationData[key] = value;
+    });
+    return verificationData;
+}
+
+</script>
+
+{% endblock %}

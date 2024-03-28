@@ -1,0 +1,85 @@
+{% extends 'ardjson/base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Connected Devices Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Add your CSS styles here */
+        .room-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .room {
+            text-align: center;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: 200px;
+        }
+
+        .room h2 {
+            margin-bottom: 10px;
+        }
+
+        .room svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div class="room-container">
+        <div class="room">
+            <h2>Master Bedroom</h2>
+            <a href="{% url 'master' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <image xlink:href="https://icons.veryicon.com/png/o/object/intelligent-home-furnishing-1/bedroom-8.png" width="24" height="24"/>
+                </svg>
+            </a>
+        </div>
+        <div class="room">
+            <h2>Room <br>101</h2>
+            <a href="{% url 'room101' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <image xlink:href="https://icons.veryicon.com/png/o/miscellaneous/smart-home-2/master-bedroom.png" width="24" height="24"/>
+                </svg>
+            </a>
+        </div>
+        <div class="room">
+            <h2>Room <br>102</h2>
+            <a href="{% url 'room102' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <image xlink:href="https://icons.veryicon.com/png/o/miscellaneous/smart-home-2/master-bedroom.png" width="24" height="24"/>
+                </svg>
+            </a>
+        </div>
+        <div class="room">
+            <h2>Room <br>103</h2>
+            <a href="{% url 'room103' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <image xlink:href="https://icons.veryicon.com/png/o/object/furniture-installation-icon/bedroom-furniture.png" width="24" height="24"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</main>
+<footer>
+    <a class="option" href="https://docs.djangoproject.com/en/4.2/" target="_blank" rel="noopener">
+        <!-- Add footer options here if needed -->
+    </a>
+</footer>
+</body>
+</html>
+
+{% endblock %}
